@@ -1,5 +1,10 @@
-import { FeedPage } from "@/pages/feed";
+import { Suspense } from "react";
+import { FeedPage } from "@/views/feed";
 
 export default function Home() {
-  return <FeedPage />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FeedPage />
+    </Suspense>
+  );
 }

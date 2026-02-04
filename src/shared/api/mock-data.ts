@@ -1,6 +1,19 @@
 // 개발용 목 데이터
 import type { ArticlesResponse } from "@/entities/article";
 
+// 인기 태그 목록
+export const mockTags: string[] = [
+  "dragons",
+  "training",
+  "react",
+  "javascript",
+  "hooks",
+  "typescript",
+  "programming",
+  "nextjs",
+  "web",
+];
+
 export const mockArticles: ArticlesResponse = {
   articles: [
     {
