@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArticlePreview, type Article, type ArticlesResponse } from "@/entities/article";
-import { apiClient } from "@/shared/api";
-
-interface TagsResponse {
-  tags: string[];
-}
+import { ArticlePreview, type Article } from "@/entities/article";
+import { GET } from "@/shared/api";
 
 export function FeedPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -21,8 +17,10 @@ export function FeedPage() {
   useEffect(() => {
     async function fetchTags() {
       try {
-        const data = await apiClient<TagsResponse>("/tags");
-        setTags(data.tags);
+        const { data } = await GET("/tags");
+        if (data?.tags) {
+          setTags(data.tags);
+        }
       } catch (error) {
         console.error("Failed to fetch tags:", error);
       }
@@ -34,11 +32,17 @@ export function FeedPage() {
     async function fetchArticles() {
       setLoading(true);
       try {
-        const endpoint = selectedTag
-          ? `/articles?tag=${encodeURIComponent(selectedTag)}&limit=10`
-          : "/articles?limit=10";
-        const data = await apiClient<ArticlesResponse>(endpoint);
-        setArticles(data.articles);
+        const { data } = await GET("/articles", {
+          params: {
+            query: {
+              tag: selectedTag ?? undefined,
+              limit: 10,
+            },
+          },
+        });
+        if (data?.articles) {
+          setArticles(data.articles as Article[]);
+        }
       } catch (error) {
         console.error("Failed to fetch articles:", error);
       } finally {

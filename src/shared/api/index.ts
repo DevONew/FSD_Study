@@ -1,2 +1,2 @@
 // Public API for api
-export { apiClient } from "./client";
+export { GET, POST, PUT, DELETE } from "./client";
