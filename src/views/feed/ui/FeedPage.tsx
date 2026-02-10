@@ -5,14 +5,20 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ArticlePreview, type Article } from "@/entities/article";
 import { GET } from "@/shared/api";
 
+const ARTICLES_PER_PAGE = 10;
+
 export function FeedPage() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [articlesCount, setArticlesCount] = useState(0);
   const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedTag = searchParams?.get("tag") ?? null;
+  const currentPage = parseInt(searchParams?.get("page") ?? "1", 10) || 1;
+
+  const pageCount = Math.ceil(articlesCount / ARTICLES_PER_PAGE);
 
   useEffect(() => {
     async function fetchTags() {
@@ -32,16 +38,19 @@ export function FeedPage() {
     async function fetchArticles() {
       setLoading(true);
       try {
+        const offset = (currentPage - 1) * ARTICLES_PER_PAGE;
         const { data } = await GET("/articles", {
           params: {
             query: {
               tag: selectedTag ?? undefined,
-              limit: 10,
+              limit: ARTICLES_PER_PAGE,
+              offset,
             },
           },
         });
         if (data?.articles) {
           setArticles(data.articles as Article[]);
+          setArticlesCount(data.articlesCount);
         }
       } catch (error) {
         console.error("Failed to fetch articles:", error);
@@ -51,7 +60,7 @@ export function FeedPage() {
     }
 
     fetchArticles();
-  }, [selectedTag]);
+  }, [selectedTag, currentPage]);
 
   function handleTagClick(tag: string) {
     router.push(`/?tag=${encodeURIComponent(tag)}`);
@@ -59,6 +68,15 @@ export function FeedPage() {
 
   function handleClearTag() {
     router.push("/");
+  }
+
+  function handlePageChange(page: number) {
+    const params = new URLSearchParams();
+    if (selectedTag) {
+      params.set("tag", selectedTag);
+    }
+    params.set("page", page.toString());
+    router.push(`/?${params.toString()}`);
   }
 
   return (
@@ -102,6 +120,29 @@ export function FeedPage() {
               articles.map((article) => (
                 <ArticlePreview key={article.slug} article={article} />
               ))
+            )}
+
+            {pageCount > 1 && (
+              <nav>
+                <ul className="pagination">
+                  {Array.from({ length: pageCount }, (_, i) => i + 1).map(
+                    (page) => (
+                      <li
+                        key={page}
+                        className={`page-item ${page === currentPage ? "active" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className="page-link"
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </button>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </nav>
             )}
           </div>
 
